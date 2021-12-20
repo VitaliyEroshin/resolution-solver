@@ -90,8 +90,33 @@ public:
 
   bool isTrue() const { return *literals.begin() == TRUTHLiteral; };
 
+  bool operator<(const Disjunct& other) const;
   std::set<Literal> literals;
 };
+
+bool Disjunct::operator<(const Disjunct& other) const {
+  std::vector<Literal> firstLiterals;
+  std::vector<Literal> otherLiterals;
+  for (const auto& x : literals) {
+    firstLiterals.push_back(x);
+  }
+  for (const auto& x : other.literals) {
+    otherLiterals.push_back(x);
+  }
+
+  if (firstLiterals.size() != otherLiterals.size()) {
+    return firstLiterals.size() < otherLiterals.size();
+  }
+  std::sort(firstLiterals.begin(), firstLiterals.end());
+  std::sort(otherLiterals.begin(), otherLiterals.end());
+
+  for (size_t i = 0; i < firstLiterals.size(); ++i) {
+    if (!(firstLiterals[i] == otherLiterals[i])) {
+      return firstLiterals[i] < otherLiterals[i];
+    }
+  }
+  return false;
+}
 
 std::ostream& operator<<(std::ostream& out, const Disjunct& disjunct) {
   out << "{";
@@ -122,8 +147,9 @@ bool CNF::process(bool verbose) {
     std::cout << "Iteration " << iterations << ":\n";
 
   bool producedNewDisjunct = false;
-  for (size_t i = 0; i < disjuncts.size(); ++i) {
-    for (size_t j = i + 1; j < disjuncts.size(); ++j) {
+  int n = disjuncts.size();
+  for (size_t i = 0; i < n; ++i) {
+    for (size_t j = i + 1; j < n; ++j) {
       Disjunct product = resolvent(disjuncts[i], disjuncts[j]);
       if (uniqueDisjuncts.count(product)) {
         continue;
@@ -146,6 +172,7 @@ bool CNF::process(bool verbose) {
     for (const auto& disjunct : disjuncts) {
       std::cout << "(" << orderCounter++ << ")" << disjunct << " ";
     }
+    std::cout << '\n';
   }
   return producedNewDisjunct;
 }
